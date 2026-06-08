@@ -306,6 +306,14 @@ ui <- page_navbar(
   padding: 8px 12px !important;
   border-left: 2px solid #e0e0e0;
 }
+      /* Inline plot note styling */
+      #food_note_inline, #labor_note_inline, #energy_note_inline {
+        color: #555;
+        font-size: 13px;
+        margin-bottom: 8px;
+        display: block;
+        padding: 0 4px;
+      }
     "))
   ),
   
@@ -464,10 +472,7 @@ ui <- page_navbar(
       card(
         card_header("Energy Price Trends"),
         card_body(
-          p("When energy prices rise faster than wages (red shading), low-income 
-      households lose purchasing power. When wages outpace energy prices 
-      (green shading), households gain ground. Only visible when Energy CPI is selected.",
-            style = "color:#555; font-size:13px; margin-bottom:8px;"),
+          textOutput("energy_note_inline"),
           plotOutput("energy_plot", height = "450px"),
           accordion(
             open = FALSE,
@@ -525,12 +530,15 @@ ui <- page_navbar(
       hr(),
       card(
         card_header("Food Price Trends"),
-        plotOutput("food_plot", height = "450px"),
-        accordion(
-          open = FALSE,
-          accordion_panel(
-            title = "📐 Methodology: Click to expand and access the construction method used",
-            p(note_food, style = "color:#999; font-size:11px; line-height:1.6;")
+        card_body(
+          textOutput("food_note_inline"),
+          plotOutput("food_plot", height = "450px"),
+          accordion(
+            open = FALSE,
+            accordion_panel(
+              title = "📐 Methodology: Click to expand and access the construction method used",
+              p(note_food, style = "color:#999; font-size:11px; line-height:1.6;")
+            )
           )
         )
       )
@@ -584,12 +592,15 @@ ui <- page_navbar(
       hr(),
       card(
         card_header("Labor Market Trends"),
-        plotOutput("labor_plot", height = "450px"),
-        accordion(
-          open = FALSE,
-          accordion_panel(
-            title = "📐 Methodology: Click to expand and access the construction method used",
-            textOutput("labor_note")
+        card_body(
+          textOutput("labor_note_inline"),
+          plotOutput("labor_plot", height = "450px"),
+          accordion(
+            open = FALSE,
+            accordion_panel(
+              title = "📐 Methodology: Click to expand and access the construction method used",
+              textOutput("labor_note")
+            )
           )
         )
       )
@@ -664,6 +675,15 @@ server <- function(input, output) {
   # Dynamic methodology note for energy tab
   output$energy_note <- renderText({
     if (input$energy_series == "energy_cpi") note_energy else note_gasoline
+  })
+  
+  # Inline note below Energy Price Trends title
+  output$energy_note_inline <- renderText({
+    if (input$energy_series == "energy_cpi") {
+      "When energy prices rise faster than wages (red shading), low-income households lose purchasing power. When wages outpace energy prices (green shading), households gain ground."
+    } else {
+      "Weekly U.S. regular gasoline retail price converted to monthly average. Gasoline is the most visible energy cost for low-income households — price spikes at the pump are felt immediately in household budgets."
+    }
   })
   
   output$energy_plot <- renderPlot({
@@ -757,6 +777,16 @@ server <- function(input, output) {
           format(input$food_dates[2], "%b %Y"))
   })
   
+  # Inline note below Food Price Trends title
+  output$food_note_inline <- renderText({
+    switch(input$food_series,
+           "food_home"  = "Grocery price inflation — food purchased at supermarkets and stores. Spikes above zero indicate consumers are paying more for staples like bread, meat, dairy, and vegetables.",
+           "food_away"  = "Restaurant and fast food price inflation. Has risen faster than grocery prices since 2020, driven by higher labor and input costs in the food service sector.",
+           "ppi_farm"   = "Producer prices paid to farmers — a leading indicator. When farm prices spike, consumer grocery prices typically follow within 4–8 weeks.",
+           "ppi_grains" = "Producer prices for grain commodities. Grain price shocks caused by droughts or supply disruptions feed directly into bread, pasta, and cereal prices at the consumer level."
+    )
+  })
+  
   output$food_series_label <- renderText({
     switch(input$food_series,
            "food_home"  = "Food at Home CPI (% change)",
@@ -827,6 +857,19 @@ server <- function(input, output) {
   output$labor_date_range <- renderText({
     paste(format(input$labor_dates[1], "%b %Y"), "to",
           format(input$labor_dates[2], "%b %Y"))
+  })
+  
+  # Inline note below Labor Market Trends title
+  output$labor_note_inline <- renderText({
+    switch(input$labor_series,
+           "unemp_lths"    = "Unemployment rate for workers without a high school diploma — the most economically vulnerable group. Always higher than the national average and rises sharply in every recession.",
+           "unemp_ba"      = "Unemployment rate for workers with a bachelor's degree or above. Consistently the lowest of any education group, showing the strong labor market protection that higher education provides.",
+           "unemp_gap"     = "Gap between less-than-HS and bachelor's unemployment rates. Widens dramatically in every recession — low-education workers are always hit first and recover last.",
+           "wage_leisure"  = "12-month wage growth in Leisure and Hospitality — the lowest paid major private sector. Used as a proxy for low-income wage trends. Compare with the Energy tab to see periods of squeeze.",
+           "wage_all"      = "12-month wage growth for all private employees — shown for comparison. The gap between this and Leisure and Hospitality wages reveals structural wage inequality across sectors.",
+           "real_min_wage" = "Federal minimum wage deflated by CPI and rebased to 2009 dollars. The flat nominal wage of $7.25 has lost ~35% of its purchasing power since 2009 as inflation accumulated while Congress did not act.",
+           "sahm_lths"     = "Low-Income SAHM Indicator: triggers above the 0.5pp red dashed threshold, signaling a labor market downturn specifically for less-than-HS workers. Triggered at ~2pp (2001), ~6pp (2008), and ~14pp (2020) — far exceeding the national threshold each time."
+    )
   })
   
   output$labor_series_label <- renderText({
