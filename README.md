@@ -12,7 +12,8 @@ and labor cost burdens on low-income U.S. households.
 - `app.R` — main Shiny application
 - `*.RDS` — pre-processed FRED data files
 - `alulu_final_project_working.R` — data pulling script
-- `Alulu_Final_Project_Paper.docx` — written explanation
+- `PID59024801_VincentAlulu_Final_Paper.docx` — written explanation (Word File)
+- `PID59024801_VincentAlulu_Final_Paper.pdf` — written explanation (PDF File)
 
 ## Data Source
 All data from FRED API (Federal Reserve Bank of St. Louis)
